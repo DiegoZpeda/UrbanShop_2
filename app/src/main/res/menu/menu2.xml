@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item android:id="@+id/home"
+            android:icon="@drawable/baseline_home_24"
+            android:title="Home"/>
+
+        <item android:id="@+id/ropa"
+            android:icon="@drawable/baseline_local_grocery_store_24"
+            android:title="Ropa"/>
+    </group>
+
+    <group android:checkableBehavior="single">
+        <item android:title="Informacion">
+            <menu>
+                <group>
+                    <item android:title="Contacto"
+                        android:icon="@drawable/baseline_contacts_24"/>
+                    <item android:title="Compartir"
+                        android:icon="@drawable/baseline_share_24"/>
+                    <item android:title="Acerca de"
+                        android:icon="@drawable/baseline_build_24"/>
+
+                </group>
+
+            </menu>
+
+        </item>
+
+    </group>
+</menu>
