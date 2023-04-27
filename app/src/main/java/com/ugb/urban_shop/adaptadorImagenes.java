@@ -34,7 +34,7 @@ public class adaptadorImagenes extends BaseAdapter {
 
     @Override
     public long getItemId(int i) {
-        return Long.parseLong(datosRopaArrayList.get(i).getIdropas());
+        return Long.parseLong(datosRopaArrayList.get(i).getId());
     }
 
     @Override

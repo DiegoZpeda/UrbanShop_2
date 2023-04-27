@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,16 +29,20 @@ public class MainActivitywoman extends AppCompatActivity {
     DbUrban db_shop;
     String accion="nuevo";
     String id="";
+    String rev="";
+    String idUnico;
     Button btn;
     TextView temp;
     ImageView img;
     String urlCompletaImg="";
     Intent tomarFotoIntent;
+    utilidades utl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        utl = new utilidades();
         btn = findViewById(R.id.btnGuardar);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -44,6 +50,7 @@ public class MainActivitywoman extends AppCompatActivity {
                 guardar_mujer();
             }
         });
+
 
         img = findViewById(R.id.imgropa);
         img.setOnClickListener(new View.OnClickListener() {
@@ -59,28 +66,35 @@ public class MainActivitywoman extends AppCompatActivity {
             Bundle parametros = getIntent().getExtras();
             accion = parametros.getString("accion");
             if (accion.equals("modificar")) {
-                String ropa[] = parametros.getStringArray("ropa");
-                id = ropa[0];
+                //String ropa[] = parametros.getStringArray("ropa");
+                JSONObject jsonObject = new JSONObject(parametros.getString("ropas")).getJSONObject("value");
+
+                id = jsonObject.getString("id");
+                rev = jsonObject.getString("_rev");
+                idUnico = jsonObject.getString(("idUnico"));
 
                 temp = findViewById(R.id.txtcodigo);
-                temp.setText(ropa[1]);
+                temp.setText(jsonObject.getString("codigo"));
 
                 temp = findViewById(R.id.txtdescripcion);
-                temp.setText(ropa[2]);
+                temp.setText(jsonObject.getString("descripcion"));
 
                 temp = findViewById(R.id.txtmarca);
-                temp.setText(ropa[3]);
+                temp.setText(jsonObject.getString("marca"));
 
                 temp = findViewById(R.id.txtpresentacion);
-                temp.setText(ropa[4]);
+                temp.setText(jsonObject.getString("presentacion"));
 
                 temp = findViewById(R.id.txtprecio);
-                temp.setText(ropa[5]);
+                temp.setText(jsonObject.getString("precio"));
 
-                urlCompletaImg = ropa[6];
+                urlCompletaImg = jsonObject.getString("urlFoto");
                 Bitmap bitmap = BitmapFactory.decodeFile(urlCompletaImg);
                 img.setImageBitmap(bitmap);
+            }else{
+                idUnico = utl.generarIdUnico();
             }
+
         }catch (Exception ex){
             Toast.makeText(this, "Error al mostrar los datos: "+ ex.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -102,9 +116,33 @@ public class MainActivitywoman extends AppCompatActivity {
             temp = (TextView) findViewById(R.id.txtprecio);
             String precio = temp.getText().toString();
 
+            //guardar datos en servidor
+            JSONObject datosropa = new JSONObject();
+            if( accion.equals("modificar") && id.length()>0 && rev.length()>0 ){
+                datosropa.put("id", id);
+                datosropa.put("_rev", rev);
+            }
+            datosropa.put("idUnico", idUnico);
+            datosropa.put("codigo", codigo);
+            datosropa.put("descripcion", descripcion);
+            datosropa.put("marca", marca);
+            datosropa.put("presentacion", presentacion);
+            datosropa.put("precio", precio);
+            datosropa.put("urlFoto", urlCompletaImg);
+
+            enviarDatosServidor objGuardarDatosServidor= new enviarDatosServidor(getApplicationContext());
+            String msg = objGuardarDatosServidor.execute(datosropa.toString()).get();
+            JSONObject respJSON = new JSONObject(msg);
+            if( respJSON.getBoolean("ok") ){
+                id = respJSON.getString("id");
+                rev = respJSON.getString("rev");
+            } else {
+                msg = "No fue pisible guardar en el servidor el producto: "+ msg;
+            }
+
             db_shop = new DbUrban(MainActivitywoman.this, "",null,1);
-            String result = db_shop.administrar_mujer(id, codigo, descripcion, marca, presentacion,precio,urlCompletaImg, accion);
-            String msg = result;
+            String result = db_shop.administrar_mujer(id, rev, idUnico, codigo, descripcion, marca, presentacion, precio, urlCompletaImg, accion);
+            msg = result;
             if( result.equals("ok") ){
                 msg = "Registro guardado con exito";
                 regresarListaropa();

@@ -4,12 +4,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -23,6 +25,9 @@ import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class Woman extends AppCompatActivity {
@@ -34,9 +39,14 @@ public class Woman extends AppCompatActivity {
     final ArrayList<ropas> alRopa = new ArrayList<ropas>();
     final ArrayList<ropas> alRopaCopy = new ArrayList<ropas>();
     ropas misRopas;
+    JSONArray datosJSON; //para los datos que vienen del servidor
+    JSONObject jsonObject;
+    ProgressDialog progreso; //para la barra de progreso...
+    obtenerDatosServidor datosServidor;
+    int posicion = 0;
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle instance) {
+        super.onCreate(instance);
         setContentView(R.layout.activity_woman);
         obtenerDatosRopa();
         buscarRopa();
@@ -50,22 +60,25 @@ public class Woman extends AppCompatActivity {
         });
     }
     public void abrirAgregarRopa(Bundle parametros) {
-        Intent iAgregarAmigos = new Intent(Woman.this, MainActivitywoman.class);
-        iAgregarAmigos.putExtras(parametros);
-        startActivity(iAgregarAmigos);
+        Intent iAgregarRopa = new Intent(Woman.this, MainActivitywoman.class);
+        iAgregarRopa.putExtras(parametros);
+        startActivity(iAgregarRopa);
     }
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
 
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mimenu, menu);
+          MenuInflater inflater = getMenuInflater();
+         inflater.inflate(R.menu.mimenu, menu);
+         try {
+         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+    //cRopa.moveToPosition(info.position);
+         posicion=info.position;
+         menu.setHeaderTitle(datosJSON.getJSONObject(posicion).getJSONObject("value").getString("marca")); //nombre del producto...
 
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-        cRopa.moveToPosition(info.position);
-        menu.setHeaderTitle(cRopa.getString(2)); //2=> Codigo de Ropa...
-
-
+         }catch (Exception ex){
+         Toast.makeText(getApplicationContext(), "Error al mostrar el menu: "+ ex.getMessage(), Toast.LENGTH_LONG).show();
+         }
     }
     @Override
     public boolean onContextItemSelected(@NonNull MenuItem item) {
@@ -77,7 +90,7 @@ public class Woman extends AppCompatActivity {
 
                     return true;
                 case R.id.mnxModificar:
-                    String ropa[] = {
+                   /* String ropa[] = {
                             cRopa.getString(0), //idmujer
                             cRopa.getString(1), //codigo
                             cRopa.getString(2), //descripcion
@@ -86,9 +99,10 @@ public class Woman extends AppCompatActivity {
                             cRopa.getString(5), //precio
                             cRopa.getString(6)  //foto->url
 
-                    };
+                    };*/
                     parametros.putString("accion", "modificar");
-                    parametros.putStringArray("ropa", ropa);
+                    //parametros.putStringArray("ropas", datosJSON.getJSONObject(posicion).toString());
+                    parametros.putString("ropas", datosJSON.getJSONObject(posicion).toString());
                     abrirAgregarRopa(parametros);
                     return true;
                 case R.id.mnxEliminar:
@@ -109,7 +123,7 @@ public class Woman extends AppCompatActivity {
             confirmacion.setPositiveButton("Si", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    db_shop.administrar_mujer(cRopa.getString(0), "","", "", "", "","","eliminar" );
+                    db_shop.administrar_mujer("","",cRopa.getString(2), "", "", "","","","","eliminar" );
                     obtenerDatosRopa();
                     dialogInterface.dismiss();
                 }
@@ -127,15 +141,13 @@ public class Woman extends AppCompatActivity {
     }
     public void obtenerDatosRopa(){
         try {
-            alRopa.clear();
-            alRopaCopy.clear();
-            db_shop = new DbUrban(Woman.this, "", null, 2);
+            db_shop = new DbUrban(Woman.this, "", null, 1);
             cRopa = db_shop.consultar_mujer();
-            if(cRopa.moveToFirst()){
+            /*if(cRopa.moveToFirst()){
                 lts = findViewById(R.id.ltsWoman);
-                /*final ArrayAdapter<String> adropa = new ArrayAdapter<String>(Woman.this,
+                final ArrayAdapter<String> adropa = new ArrayAdapter<String>(Woman.this,
                         android.R.layout.simple_expandable_list_item_1, alRopa);
-                lts.setAdapter(adropa);*/
+                lts.setAdapter(adropa);
                 do{
                     //alRopa.add(cRopa.getString(2));//2 es el nombre del amigo, pues 0 es el idAmigo.
                     misRopas = new ropas(
@@ -154,11 +166,61 @@ public class Woman extends AppCompatActivity {
                 alRopaCopy.addAll(alRopa);
                 //adropa.notifyDataSetChanged();
                 registerForContextMenu(lts);
-            }else{
-                Toast.makeText(this, "NO HAY datos que mostrar", Toast.LENGTH_SHORT).show();
-            }
+            }else{*/
+            obtenerDatosRopasServer();
+               // Toast.makeText(this, "NO HAY datos que mostrar", Toast.LENGTH_SHORT).show();
+            //}
         }catch (Exception e){
             Toast.makeText(this, "Error al obtener amigos: "+ e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+    void obtenerDatosRopasServer(){
+        try {
+            datosServidor = new obtenerDatosServidor();
+            String data = datosServidor.execute().get();
+            Log.d("RECIBIENDO: ", "DATA: "+ data);
+            jsonObject = new JSONObject(data);
+            datosJSON = jsonObject.getJSONArray("rows");
+            mostrarDatosRopa();
+        }catch (Exception ex){
+            Toast.makeText(this, "Error al obtener datos desde el servidor: "+ ex.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+    void mostrarDatosRopa(){
+        try {
+            if( datosJSON.length()>0 ){
+                lts = findViewById(R.id.ltsWoman);
+                alRopa.clear();
+                alRopaCopy.clear();
+
+                JSONObject misDatosJSONObject;
+                for (int i=0; i<datosJSON.length(); i++){
+                    misDatosJSONObject = datosJSON.getJSONObject(i).getJSONObject("value");
+                    Log.d("MOSTRANDO: ", "DATA: "+ misDatosJSONObject.toString());
+
+                    misRopas = new ropas(
+                            "123",
+                            misDatosJSONObject.getString("_rev"),
+                            misDatosJSONObject.getString("idUnico"),
+                            misDatosJSONObject.getString("codigo"),
+                            misDatosJSONObject.getString("descripcion"),
+                            misDatosJSONObject.getString("marca"),
+                            misDatosJSONObject.getString("presentacion"),
+                            misDatosJSONObject.getString("precio"),
+                            misDatosJSONObject.getString("urlFoto")
+                    );
+                    alRopa.add(misRopas);
+                }
+                adaptadorImagenes adImagenes = new adaptadorImagenes(getApplicationContext(), alRopa);
+                lts.setAdapter(adImagenes);
+                alRopaCopy.addAll(alRopa);
+                //adAmigos.notifyDataSetChanged();
+                registerForContextMenu(lts);
+            }else{
+                Toast.makeText(this, "No hay datos que mostrar", Toast.LENGTH_LONG).show();
+            }
+        }catch (Exception ex){
+            Toast.makeText(this, "Error al mostrar datos ropas: "+ ex.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     void buscarRopa(){
@@ -178,7 +240,7 @@ public class Woman extends AppCompatActivity {
                         alRopa.addAll(alRopaCopy);
                     }else{ //si esta buscando amigos...
                         for(ropas ropas : alRopaCopy){
-                            String idropas = ropas.getIdropas();
+                            String idropas = ropas.getId();
                             //String codigo = ropas.getCodigo();
                             String descripcion = ropas.getDescripcion();
                             String marca = ropas.getMarca();
