@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <EditText
+        android:id="@+id/Username"
+        android:layout_width="253dp"
+        android:layout_height="43dp"
+        android:layout_marginLeft="55dp"
+        android:layout_marginTop="155dp"
+        android:hint="Username"
+        tools:ignore="MissingConstraints" />
+
+    <ImageView
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="130dp"
+        android:id="@+id/imagelogin"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/logou"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="155dp"
+        tools:layout_editor_absoluteY="77dp">
+
+    </ImageView>
+
+    <EditText
+        android:layout_marginTop="200dp"
+        android:layout_marginLeft="55dp"
+        android:id="@+id/Pass"
+        android:layout_width="253dp"
+        android:layout_height="43dp"
+        android:hint="Password"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="79dp"
+        tools:layout_editor_absoluteY="270dp" />
+
+
+    <Button
+        android:layout_marginTop="275dp"
+        android:layout_marginLeft="55dp"
+        android:id="@+id/Registro"
+        android:layout_width="159dp"
+        android:layout_height="41dp"
+        android:text="Registrarse"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="126dp"
+        tools:layout_editor_absoluteY="414dp"
+        android:onClick="RegistroData" />
+
+    <Button
+        android:id="@+id/Ingresar"
+        android:layout_width="159dp"
+        android:layout_height="41dp"
+        android:layout_marginLeft="55dp"
+        android:layout_marginTop="325dp"
+        android:text="Ingresar"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="126dp"
+        tools:layout_editor_absoluteY="350dp"
+        android:onClick="InicioSesion" />
+
+    <TextView
+        android:layout_marginLeft="55dp"
+        android:id="@+id/textView"
+        android:layout_width="204dp"
+        android:layout_height="43dp"
+        android:text="Bienvenidos"
+        android:textSize="15pt"
+        tools:layout_editor_absoluteX="103dp"
+        tools:layout_editor_absoluteY="16dp" />
+
+</RelativeLayout>

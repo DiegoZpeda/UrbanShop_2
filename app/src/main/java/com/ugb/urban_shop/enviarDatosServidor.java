@@ -65,7 +65,6 @@ public class enviarDatosServidor extends AsyncTask<String, String, String> {
             return jsonResponse;
         }catch (Exception ex){
             Log.d("ENVIANDO", "Error al emviar datos al server: "+ ex.getLocalizedMessage());
-            //Toast.makeText(context, "Error al enviar Datos al servidor: "+ ex.getMessage(), Toast.LENGTH_LONG).show();
         }
         return null;
     }
